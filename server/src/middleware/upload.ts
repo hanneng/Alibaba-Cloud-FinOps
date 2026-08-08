@@ -28,6 +28,6 @@ export const upload = multer({
     }
   },
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '52428800', 10), // 50MB default
+    fileSize: parseInt(process.env.MAX_FILE_SIZE || '104857600', 10), // 100MB default
   },
 });

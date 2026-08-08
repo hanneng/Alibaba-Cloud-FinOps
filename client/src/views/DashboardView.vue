@@ -121,7 +121,7 @@ const regionBarOption = computed(() => ({
 function formatCurrency(val: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'CNY',
+    currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(val);

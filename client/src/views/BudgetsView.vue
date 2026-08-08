@@ -65,7 +65,7 @@ const barOption = computed(() => ({
 function formatCurrency(val: number | string): string {
   const num = typeof val === 'string' ? parseFloat(val) : val;
   return new Intl.NumberFormat('en-US', {
-    style: 'currency', currency: 'CNY',
+    style: 'currency', currency: 'USD',
     minimumFractionDigits: 0, maximumFractionDigits: 2,
   }).format(num);
 }

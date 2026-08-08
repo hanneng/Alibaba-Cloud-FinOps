@@ -161,7 +161,7 @@ export function parseAlibabaCsv(
 
   const items: Array<Omit<BillLineItem, 'id'>> = [];
   let totalAmount = 0;
-  let currency = 'CNY';
+  let currency = 'USD';
   let detectedMonth: string | null = null;
 
   for (const row of parsed.data) {

@@ -75,7 +75,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function formatCurrency(val: string | number, currency = 'CNY'): string {
+function formatCurrency(val: string | number, currency = 'USD'): string {
   const num = typeof val === 'string' ? parseFloat(val) : val;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
