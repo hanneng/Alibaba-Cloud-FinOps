@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
             .from(billLineItems)
             .where(
               and(
-                sql`${billLineItems.billingDate} LIKE ${month + '%'}`,
+                sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`,
                 sql.join(tagConditions, sql` OR `)
               )
             );
@@ -156,7 +156,7 @@ router.get('/tags/summary', async (req, res) => {
       .where(
         and(
           isNotNull(billLineItems.tags),
-          month ? sql`${billLineItems.billingDate} LIKE ${month + '%'}` : sql`true`
+          month ? sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}` : sql`true`
         )
       )
       .groupBy(billLineItems.tags);

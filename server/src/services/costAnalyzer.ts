@@ -56,7 +56,7 @@ export async function getCostByService(
   const conditions = [isNotNull(billLineItems.productName)];
   if (month) {
     conditions.push(
-      sql`${billLineItems.billingDate} LIKE ${month + '%'}`
+      sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`
     );
   }
 
@@ -88,7 +88,7 @@ export async function getCostByRegion(
   const conditions = [isNotNull(billLineItems.region)];
   if (month) {
     conditions.push(
-      sql`${billLineItems.billingDate} LIKE ${month + '%'}`
+      sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`
     );
   }
 
@@ -121,7 +121,7 @@ export async function getTopResources(
   const conditions: ReturnType<typeof isNotNull>[] = [];
   if (month) {
     conditions.push(
-      sql`${billLineItems.billingDate} LIKE ${month + '%'}`
+      sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`
     );
   }
 
@@ -230,7 +230,7 @@ export async function getCostBySubscriptionType(month?: string): Promise<CostByD
   const conditions = [isNotNull(billLineItems.subscriptionType)];
   if (month) {
     conditions.push(
-      sql`${billLineItems.billingDate} LIKE ${month + '%'}`
+      sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`
     );
   }
 

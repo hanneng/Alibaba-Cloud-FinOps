@@ -178,7 +178,7 @@ async function getProductCosts(month: string): Promise<Map<string, number>> {
     .where(
       and(
         isNotNull(billLineItems.productCode),
-        sql`${billLineItems.billingDate} LIKE ${month + '%'}`
+        sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`
       )
     )
     .groupBy(billLineItems.productCode);

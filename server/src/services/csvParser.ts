@@ -23,6 +23,8 @@ const COLUMN_MAP: Record<string, string & keyof BillLineItem> = {
   'Deducted By Cash Coupons': 'deductedByCashCoupons',
   'Payment Amount': 'paymentAmount',
   'Billing Date': 'billingDate',
+  'Billing Period': 'billingDate',
+  'Period': 'billingDate',
   // Chinese columns
   账号ID: 'accountId',
   产品代码: 'productCode',
@@ -41,6 +43,8 @@ const COLUMN_MAP: Record<string, string & keyof BillLineItem> = {
   账单日期: 'billingDate',
   消费时间: 'billingDate',
   服务时间: 'billingDate',
+  账期: 'billingDate',
+  账单周期: 'billingDate',
 };
 
 /**
@@ -89,6 +93,10 @@ function normalizeDate(value: string | undefined | null): string | null {
   // Handle YYYYMMDD
   if (/^\d{8}$/.test(v)) {
     return `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}`;
+  }
+  // Handle YYYY-MM (billing period like "2026-08")
+  if (/^\d{4}-\d{2}$/.test(v)) {
+    return `${v}-01`;
   }
   return v;
 }
@@ -152,6 +160,9 @@ export function parseAlibabaCsv(
   const headers = parsed.meta.fields || [];
   const columnMapping = detectColumnMapping(headers);
   const mappedFields = new Set(columnMapping.values());
+
+  console.log(`[CSV Parser] Headers found: ${headers.length}, Mapped: ${columnMapping.size}`);
+  console.log(`[CSV Parser] Headers: ${headers.join(', ')}`);
 
   // Track unmapped columns
   const unmappedColumns = headers.filter((h) => {
@@ -244,7 +255,7 @@ export function parseAlibabaCsv(
     });
   }
 
-  return {
+  const result = {
     items,
     billingMonth: detectedMonth || new Date().toISOString().substring(0, 7),
     totalAmount,
@@ -252,4 +263,11 @@ export function parseAlibabaCsv(
     rowCount: items.length,
     unmappedColumns,
   };
+
+  console.log(`[CSV Parser] Result: ${result.rowCount} items, month=${result.billingMonth}, total=${result.totalAmount}, unmapped=${result.unmappedColumns.length}`);
+  if (result.unmappedColumns.length > 0) {
+    console.log(`[CSV Parser] Unmapped columns: ${result.unmappedColumns.join(', ')}`);
+  }
+
+  return result;
 }

@@ -4,7 +4,7 @@ import { db } from '../db/index.js';
 import { bills, billLineItems } from '../db/schema.js';
 import { upload } from '../middleware/upload.js';
 import { parseAlibabaCsv } from '../services/csvParser.js';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -72,13 +72,13 @@ router.get('/', async (_req, res) => {
     // Get line item count per bill
     const billsWithCounts = await Promise.all(
       allBills.map(async (bill) => {
-        const [count] = await db
-          .select({ count: eq(billLineItems.billId, bill.id) })
+        const [countResult] = await db
+          .select({ count: sql<number>`count(*)::int` })
           .from(billLineItems)
           .where(eq(billLineItems.billId, bill.id));
         return {
           ...bill,
-          lineItemCount: count?.count ?? 0,
+          lineItemCount: countResult?.count ?? 0,
         };
       })
     );

@@ -22,7 +22,7 @@ export async function detectIdleResources(month: string): Promise<SavingsItem[]>
     .where(
       and(
         isNotNull(billLineItems.instanceId),
-        sql`${billLineItems.billingDate} LIKE ${month + '%'}`
+        sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`
       )
     )
     .groupBy(
@@ -95,7 +95,7 @@ export async function detectRICandidates(month: string): Promise<SavingsItem[]> 
     .where(
       and(
         isNotNull(billLineItems.instanceId),
-        sql`${billLineItems.billingDate} LIKE ${month + '%'}`
+        sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`
       )
     )
     .groupBy(
@@ -160,7 +160,7 @@ export async function detectRightsizing(month: string): Promise<SavingsItem[]> {
       and(
         isNotNull(billLineItems.instanceId),
         isNotNull(billLineItems.billingItem),
-        sql`${billLineItems.billingDate} LIKE ${month + '%'}`
+        sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`
       )
     )
     .groupBy(
