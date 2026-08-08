@@ -1,6 +1,6 @@
 import { db } from '../db/index.js';
 import { billLineItems, bills } from '../db/schema.js';
-import { eq, sql, and, gte, lte, isNotNull } from 'drizzle-orm';
+import { eq, sql, and, gte, lte, isNotNull, or, ilike } from 'drizzle-orm';
 import type {
   CostTrend,
   CostByDimension,
@@ -240,6 +240,122 @@ export async function getCostBySubscriptionType(month?: string): Promise<CostByD
     .from(billLineItems)
     .where(and(...conditions))
     .groupBy(billLineItems.subscriptionType)
+    .orderBy(sql`SUM(${billLineItems.pretaxAmount}::numeric) DESC`);
+
+  const total = result.reduce((sum, r) => sum + Number(r.amount), 0);
+
+  return result.map((r) => ({
+    name: r.name || 'Unknown',
+    amount: Number(r.amount),
+    percentage: total > 0 ? (Number(r.amount) / total) * 100 : 0,
+  }));
+}
+
+/**
+ * Search unique resources by name/ID pattern.
+ */
+export async function getResources(query?: string) {
+  const conditions: ReturnType<typeof isNotNull>[] = [
+    or(
+      isNotNull(billLineItems.instanceId),
+      isNotNull(billLineItems.resourceName)
+    )!,
+  ];
+
+  if (query && query.trim()) {
+    const q = `%${query.trim()}%`;
+    conditions.push(
+      or(
+        ilike(billLineItems.instanceId, q),
+        ilike(billLineItems.resourceName, q)
+      )!
+    );
+  }
+
+  const result = await db
+    .select({
+      instanceId: billLineItems.instanceId,
+      resourceName: billLineItems.resourceName,
+      productName: billLineItems.productName,
+      totalCost: sql<number>`COALESCE(SUM(${billLineItems.pretaxAmount}::numeric), 0)`,
+    })
+    .from(billLineItems)
+    .where(and(...conditions))
+    .groupBy(
+      billLineItems.instanceId,
+      billLineItems.resourceName,
+      billLineItems.productName
+    )
+    .orderBy(sql`SUM(${billLineItems.pretaxAmount}::numeric) DESC`)
+    .limit(100);
+
+  return result.map((r) => ({
+    instanceId: r.instanceId,
+    resourceName: r.resourceName,
+    productName: r.productName || 'Unknown',
+    totalCost: Number(r.totalCost),
+  }));
+}
+
+/**
+ * Get monthly cost history for a specific resource (by instanceId).
+ */
+export async function getResourceCostHistory(instanceId: string) {
+  const periodCol = sql<string>`to_char(${billLineItems.billingDate}::date, 'YYYY-MM')`;
+
+  const result = await db
+    .select({
+      period: periodCol,
+      amount: sql<number>`COALESCE(SUM(${billLineItems.pretaxAmount}::numeric), 0)`,
+    })
+    .from(billLineItems)
+    .where(
+      and(
+        or(
+          eq(billLineItems.instanceId, instanceId),
+          eq(billLineItems.resourceName, instanceId)
+        )!,
+        isNotNull(billLineItems.billingDate)
+      )
+    )
+    .groupBy(periodCol)
+    .orderBy(periodCol);
+
+  return result.map((r) => ({
+    period: r.period,
+    amount: Number(r.amount),
+  }));
+}
+
+/**
+ * Get cost breakdown by service for a specific resource.
+ */
+export async function getResourceCostByService(
+  instanceId: string,
+  month?: string
+): Promise<CostByDimension[]> {
+  const conditions = [
+    or(
+      eq(billLineItems.instanceId, instanceId),
+      eq(billLineItems.resourceName, instanceId)
+    )!,
+    isNotNull(billLineItems.productName),
+  ];
+
+  if (month) {
+    conditions.push(
+      sql`to_char(${billLineItems.billingDate}, 'YYYY-MM') = ${month}`
+    );
+  }
+
+  const result = await db
+    .select({
+      name: billLineItems.productName,
+      amount: sql<number>`COALESCE(SUM(${billLineItems.pretaxAmount}::numeric), 0)`,
+    })
+    .from(billLineItems)
+    .where(and(...conditions))
+    .groupBy(billLineItems.productName)
     .orderBy(sql`SUM(${billLineItems.pretaxAmount}::numeric) DESC`);
 
   const total = result.reduce((sum, r) => sum + Number(r.amount), 0);

@@ -9,6 +9,7 @@ import costsRouter from './routes/costs.js';
 import anomaliesRouter from './routes/anomalies.js';
 import savingsRouter from './routes/savings.js';
 import budgetsRouter from './routes/budgets.js';
+import resourceGroupsRouter from './routes/resourceGroups.js';
 
 const app = express();
 const port = parseInt(process.env.PORT || '3000', 10);
@@ -65,6 +66,19 @@ async function initDatabase() {
         threshold_pct NUMERIC(5, 2) DEFAULT 30.00 NOT NULL,
         comparison_mode TEXT DEFAULT 'month_over_month' NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS resource_groups (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        color VARCHAR(7) DEFAULT '#3B82F6' NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS resource_group_members (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        group_id UUID NOT NULL REFERENCES resource_groups(id) ON DELETE CASCADE,
+        resource_name TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_rgm_group_id ON resource_group_members(group_id);
+      CREATE INDEX IF NOT EXISTS idx_rgm_resource_name ON resource_group_members(resource_name);
     `);
     console.log('Database tables ready');
   } catch (err) {
@@ -89,6 +103,7 @@ app.use('/api/costs', costsRouter);
 app.use('/api/anomalies', anomaliesRouter);
 app.use('/api/savings', savingsRouter);
 app.use('/api/budgets', budgetsRouter);
+app.use('/api/groups', resourceGroupsRouter);
 
 // Error handling
 app.use(

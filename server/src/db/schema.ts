@@ -84,3 +84,21 @@ export const anomalyRules = pgTable('anomaly_rules', {
     .default('month_over_month')
     .notNull(),
 });
+
+export const resourceGroups = pgTable('resource_groups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  color: varchar('color', { length: 7 }).default('#3B82F6').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const resourceGroupMembers = pgTable(
+  'resource_group_members',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    groupId: uuid('group_id')
+      .notNull()
+      .references(() => resourceGroups.id, { onDelete: 'cascade' }),
+    resourceName: text('resource_name').notNull(),
+  }
+);

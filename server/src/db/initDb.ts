@@ -93,6 +93,22 @@ async function initDatabase() {
       threshold_pct NUMERIC(5, 2) DEFAULT 30.00 NOT NULL,
       comparison_mode TEXT DEFAULT 'month_over_month' NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS resource_groups (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name TEXT NOT NULL,
+      color VARCHAR(7) DEFAULT '#3B82F6' NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS resource_group_members (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      group_id UUID NOT NULL REFERENCES resource_groups(id) ON DELETE CASCADE,
+      resource_name TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_rgm_group_id ON resource_group_members(group_id);
+    CREATE INDEX IF NOT EXISTS idx_rgm_resource_name ON resource_group_members(resource_name);
   `);
 
   console.log('All tables created successfully');

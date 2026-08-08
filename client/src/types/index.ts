@@ -94,3 +94,38 @@ export interface UploadResult {
   rowCount: number;
   unmappedColumns: string[];
 }
+
+export interface ResourceInfo {
+  instanceId: string | null;
+  resourceName: string | null;
+  productName: string;
+  totalCost: number;
+}
+
+export interface ResourceCostHistory {
+  period: string;
+  amount: number;
+}
+
+export interface ResourceGroup {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
+  memberCount: number;
+  currentCost?: number;
+}
+
+export interface ResourceGroupMember {
+  id: string;
+  groupId: string;
+  resourceName: string;
+  cost?: number;
+}
+
+export interface GroupCostTrend {
+  groupId: string;
+  name: string;
+  color: string;
+  trend: Array<{ period: string; amount: number }>;
+}

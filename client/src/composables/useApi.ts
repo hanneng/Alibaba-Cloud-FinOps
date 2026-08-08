@@ -69,4 +69,36 @@ export const budgetsApi = {
     api.get('/budgets/tags/summary', { params: { month } }),
 };
 
+// Resources
+export const resourcesApi = {
+  search: (q?: string) =>
+    api.get('/costs/resources', { params: { q } }),
+  history: (instanceId: string) =>
+    api.get('/costs/resource/history', { params: { instanceId } }),
+  services: (instanceId: string, month?: string) =>
+    api.get('/costs/resource/services', { params: { instanceId, month } }),
+};
+
+// Resource Groups (Application Groups)
+export const groupsApi = {
+  list: (month?: string) =>
+    api.get('/groups', { params: { month } }),
+  create: (data: { name: string; color: string }) =>
+    api.post('/groups', data),
+  update: (id: string, data: { name: string; color: string }) =>
+    api.put(`/groups/${id}`, data),
+  delete: (id: string) =>
+    api.delete(`/groups/${id}`),
+  members: (id: string, month?: string) =>
+    api.get(`/groups/${id}/members`, { params: { month } }),
+  addMembers: (id: string, resources: string[]) =>
+    api.post(`/groups/${id}/members`, { resources }),
+  removeMember: (groupId: string, memberId: string) =>
+    api.delete(`/groups/${groupId}/members/${memberId}`),
+  costs: (month: string) =>
+    api.get('/groups/costs', { params: { month } }),
+  trend: () =>
+    api.get('/groups/costs/trend'),
+};
+
 export default api;

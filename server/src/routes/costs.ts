@@ -7,6 +7,9 @@ import {
   compareCosts,
   getAvailableMonths,
   getCostBySubscriptionType,
+  getResources,
+  getResourceCostHistory,
+  getResourceCostByService,
 } from '../services/costAnalyzer.js';
 
 const router = Router();
@@ -101,6 +104,51 @@ router.get('/months', async (_req, res) => {
   } catch (error) {
     console.error('Available months error:', error);
     res.status(500).json({ error: 'Failed to get available months' });
+  }
+});
+
+// Search resources by name/ID
+router.get('/resources', async (req, res) => {
+  try {
+    const { q } = req.query;
+    const result = await getResources(q as string);
+    res.json(result);
+  } catch (error) {
+    console.error('Search resources error:', error);
+    res.status(500).json({ error: 'Failed to search resources' });
+  }
+});
+
+// Resource monthly cost history
+router.get('/resource/history', async (req, res) => {
+  try {
+    const { instanceId } = req.query;
+    if (!instanceId) {
+      return res.status(400).json({ error: 'instanceId is required' });
+    }
+    const result = await getResourceCostHistory(instanceId as string);
+    res.json(result);
+  } catch (error) {
+    console.error('Resource history error:', error);
+    res.status(500).json({ error: 'Failed to get resource cost history' });
+  }
+});
+
+// Resource cost by service
+router.get('/resource/services', async (req, res) => {
+  try {
+    const { instanceId, month } = req.query;
+    if (!instanceId) {
+      return res.status(400).json({ error: 'instanceId is required' });
+    }
+    const result = await getResourceCostByService(
+      instanceId as string,
+      month as string
+    );
+    res.json(result);
+  } catch (error) {
+    console.error('Resource services error:', error);
+    res.status(500).json({ error: 'Failed to get resource cost by service' });
   }
 });
 
