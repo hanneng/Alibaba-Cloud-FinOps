@@ -2,6 +2,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Use China npm mirror for faster downloads
+RUN npm config set registry https://registry.npmmirror.com
+
 # Copy root workspace config
 COPY package.json ./
 COPY tsconfig.base.json ./
