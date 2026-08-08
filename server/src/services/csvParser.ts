@@ -7,7 +7,7 @@ import type { BillLineItem } from '../types.js';
  * Supports both Chinese and English column names.
  */
 const COLUMN_MAP: Record<string, string & keyof BillLineItem> = {
-  // English columns
+  // === Simple English columns ===
   'Account ID': 'accountId',
   'Product Code': 'productCode',
   'Product Name': 'productName',
@@ -25,7 +25,27 @@ const COLUMN_MAP: Record<string, string & keyof BillLineItem> = {
   'Billing Date': 'billingDate',
   'Billing Period': 'billingDate',
   'Period': 'billingDate',
-  // Chinese columns
+
+  // === Alibaba Cloud Detailed Bill (slash-separated headers) ===
+  'Identity Details/Resource Purchase Account ID': 'accountId',
+  'Identity Details/Resource Owner Account ID': 'accountId',
+  'Product Details/Product Code': 'productCode',
+  'Product Details/Product Name': 'productName',
+  'Product Details/Commodity Name': 'productDetail',
+  'Product Details/Billing Item Name': 'billingItem',
+  'Billing Details/Consume Type': 'subscriptionType',
+  'Billing Details/Billing Month': 'billingDate',
+  'Resource Details/Region': 'region',
+  'Resource Details/Instance ID': 'instanceId',
+  'Resource Details/Resource Name': 'resourceName',
+  'Usage Details/Usage': 'usage',
+  'Usage Details/Usage Unit': 'unit',
+  'Payable Details/Tax-exclusive Payable Amount': 'pretaxAmount',
+  'Fee Details/Gross Amount': 'paymentAmount',
+  'Coupon Deduction Details/Coupon Deduction Amount': 'deductedByCashCoupons',
+  'Discount Details/Amount After Price Reduction': 'pretaxAmount',
+
+  // === Simple Chinese columns ===
   账号ID: 'accountId',
   产品代码: 'productCode',
   产品名称: 'productName',
@@ -45,6 +65,8 @@ const COLUMN_MAP: Record<string, string & keyof BillLineItem> = {
   服务时间: 'billingDate',
   账期: 'billingDate',
   账单周期: 'billingDate',
+  官网价: 'paymentAmount',
+  优惠后金额: 'pretaxAmount',
 };
 
 /**
@@ -93,6 +115,10 @@ function normalizeDate(value: string | undefined | null): string | null {
   // Handle YYYYMMDD
   if (/^\d{8}$/.test(v)) {
     return `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}`;
+  }
+  // Handle YYYYMM (billing month like "202606")
+  if (/^\d{6}$/.test(v)) {
+    return `${v.slice(0, 4)}-${v.slice(4, 6)}-01`;
   }
   // Handle YYYY-MM (billing period like "2026-08")
   if (/^\d{4}-\d{2}$/.test(v)) {
@@ -205,12 +231,20 @@ export function parseAlibabaCsv(
       mapped.deductedByCashCoupons as unknown as string
     );
 
-    // Detect currency from pretax amount string
+    // Detect currency from pretax amount string or Currency column
     if (mapped.pretaxAmount) {
       const raw = String(mapped.pretaxAmount);
       if (raw.includes('$') || raw.toUpperCase().includes('USD')) currency = 'USD';
       else if (raw.toUpperCase().includes('CNY') || raw.includes('¥'))
         currency = 'CNY';
+    }
+    // Check for explicit currency column (Pricing Details/Currency)
+    const currencyCol = headers.find((h: string) => h.trim() === 'Pricing Details/Currency');
+    if (currencyCol && row[currencyCol]) {
+      const cur = row[currencyCol].trim().toUpperCase();
+      if (cur === 'USD' || cur === 'CNY' || cur === 'EUR' || cur === 'GBP' || cur === 'JPY' || cur === 'SGD') {
+        currency = cur;
+      }
     }
 
     // Normalize date and detect month
