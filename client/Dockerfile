@@ -7,6 +7,7 @@ RUN npm config set registry https://registry.npmmirror.com
 
 # Copy root workspace config
 COPY package.json ./
+COPY tsconfig.base.json ./
 
 # Copy client workspace
 COPY client/package.json ./client/
@@ -20,7 +21,7 @@ COPY client/src ./client/src
 
 # Install dependencies and build
 RUN npm install --workspace=client --include-workspace-root
-RUN npm run build -w client
+RUN cd client && npx vite build
 
 # --- Production stage ---
 FROM nginx:alpine AS production
