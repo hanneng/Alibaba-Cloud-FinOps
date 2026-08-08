@@ -24,6 +24,7 @@ export const useAppStore = defineStore('app', () => {
   async function fetchMonths() {
     try {
       const { data } = await costsApi.months();
+      console.log('API /costs/months response:', data);
       availableMonths.value = data;
       if (data.length > 0 && !selectedMonth.value) {
         selectedMonth.value = data[data.length - 1];

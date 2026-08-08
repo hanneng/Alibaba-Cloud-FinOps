@@ -156,8 +156,12 @@ async function loadDashboard() {
 }
 
 onMounted(async () => {
+  console.log('Dashboard mounted, fetching months...');
   await store.fetchMonths();
+  console.log('Available months:', store.availableMonths);
+  console.log('Selected month:', store.selectedMonth);
   await store.fetchBills();
+  console.log('Bills:', store.bills.length);
   await loadDashboard();
 });
 
@@ -172,10 +176,12 @@ watch(() => store.selectedMonth, loadDashboard);
         <p class="text-sm text-gray-500 mt-1">Overview of your Alibaba Cloud spending</p>
       </div>
       <div class="flex items-center gap-3">
+        <label class="text-sm font-medium text-gray-600">Billing Month</label>
         <select
           v-model="store.selectedMonth"
-          class="select w-40"
+          class="select w-44"
         >
+          <option v-if="store.availableMonths.length === 0" disabled value="">No bills uploaded</option>
           <option v-for="m in store.availableMonths" :key="m" :value="m">{{ m }}</option>
         </select>
       </div>
