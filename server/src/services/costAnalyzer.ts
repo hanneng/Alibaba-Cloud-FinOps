@@ -18,6 +18,9 @@ export async function getCostTrend(
   const dateFormat =
     granularity === 'day' ? 'YYYY-MM-DD' : 'YYYY-MM';
 
+  // Shared expression so SELECT, GROUP BY, and ORDER BY match exactly
+  const periodExpr = sql`to_char(${billLineItems.billingDate}::date, ${dateFormat})`;
+
   let conditions = [isNotNull(billLineItems.billingDate)];
 
   if (from) {
@@ -29,17 +32,13 @@ export async function getCostTrend(
 
   const result = await db
     .select({
-      period: sql<string>`to_char(${billLineItems.billingDate}::date, ${dateFormat})`,
+      period: sql<string>`${periodExpr}`,
       amount: sql<number>`COALESCE(SUM(${billLineItems.pretaxAmount}::numeric), 0)`,
     })
     .from(billLineItems)
     .where(and(...conditions))
-    .groupBy(
-      sql`to_char(${billLineItems.billingDate}::date, ${dateFormat})`
-    )
-    .orderBy(
-      sql`to_char(${billLineItems.billingDate}::date, ${dateFormat})`
-    );
+    .groupBy(periodExpr)
+    .orderBy(periodExpr);
 
   return result.map((r) => ({
     period: r.period,
